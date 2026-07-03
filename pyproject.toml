@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "swarm-safety-gate"
+version = "0.1.0"
+description = "Deny-by-default command safety gate and text-ReAct routing agent for small LLMs"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+authors = [{ name = "Swarm AI Research" }]
+keywords = ["llm", "agent", "safety", "react", "guardrails", "multi-agent"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+# Core (SafetyGate / ExecutionGate) is pure-stdlib and has NO runtime deps.
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/swarm-ai-research/swarm-safety-gate"
+Repository = "https://github.com/swarm-ai-research/swarm-safety-gate"
+"Derived From" = "https://github.com/chetdep/balder-brain-v5"
+
+[project.optional-dependencies]
+# The ReAct agent that talks to an OpenAI-compatible endpoint (e.g. Ollama).
+agent = ["openai>=1.0", "python-dotenv>=1.0"]
+# Rich terminal REPL.
+cli = ["rich>=13.0"]
+# Telegram front-end.
+telegram = ["python-telegram-bot>=21.0"]
+all = ["openai>=1.0", "python-dotenv>=1.0", "rich>=13.0", "python-telegram-bot>=21.0"]
+dev = ["pytest>=7.0"]
+
+[project.scripts]
+swarm-safety-gate = "swarm_safety_gate.cli_interface:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/swarm_safety_gate"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# LLM-dependent tests are marked `llm` and skipped by default.
+addopts = "-m 'not llm'"
+markers = ["llm: tests that require a running OpenAI-compatible LLM endpoint"]

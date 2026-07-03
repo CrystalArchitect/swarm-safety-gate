@@ -1,0 +1,25 @@
+swarm-safety-gate
+Copyright (c) 2026 Swarm AI Research
+
+This product is a derivative work of:
+
+    balder-brain-v5
+    https://github.com/chetdep/balder-brain-v5
+    Copyright (c) 2026 Balder Autobot Project
+    Licensed under the MIT License.
+
+Modifications made by Swarm AI Research relative to the upstream project:
+
+  * Fixed a SyntaxError (IndentationError) in agent_core.py that prevented the
+    core module from being imported at all.
+  * Restructured the code into an installable Python package (src-layout) with
+    a proper `pyproject.toml`; converted the inconsistent `from Core.X` absolute
+    imports into intra-package relative imports.
+  * Made the SafetyGate / ExecutionGate importable with zero third-party
+    dependencies; moved the LLM/CLI/Telegram requirements into optional extras.
+  * Added a deterministic pytest suite for the safety layer (the upstream
+    "tests/" were LLM-dependent benchmark scripts, several of which imported
+    modules that had been deleted from the repository).
+
+The original upstream research claims (e.g. accuracy benchmarks) are NOT
+reproduced or endorsed by this package. See README.md for details.
