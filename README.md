@@ -1,5 +1,9 @@
 # swarm-safety-gate
 
+[![CI](https://github.com/swarm-ai-research/swarm-safety-gate/actions/workflows/ci.yml/badge.svg)](https://github.com/swarm-ai-research/swarm-safety-gate/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/python-3.9%E2%80%933.13-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+
 A **deny-by-default command safety gate** and a **text-based ReAct routing agent**
 for small language models, hardened against *behavioral hallucination* — the
 failure mode where a small model misreads user intent and **executes** an action
@@ -72,8 +76,24 @@ pytest
 ```
 
 The default suite is **deterministic** — it exercises the safety gate directly
-with no LLM or network. LLM-dependent benchmarks are marked `llm` and skipped by
+with no LLM or network. LLM-dependent tests are marked `llm` and skipped by
 default (`pytest -m llm` to opt in, with an endpoint configured).
+
+### Reproducible benchmark
+
+Unlike the upstream benchmark (which filled templates with an *unseeded* RNG and
+so scored a different number every run — we saw the same suite swing 59%→98%),
+the bundled benchmark is seeded and deterministic:
+
+```bash
+python benchmarks/router_benchmark.py --seed 0 --n 200
+# seed=0  n=200
+#   dangerous blocked : 100.0%
+#   safe allowed      : 100.0%
+```
+
+Identical seed ⇒ identical cases ⇒ identical result. It exits non-zero if any
+dangerous case is not blocked, so CI runs it as a gate.
 
 ## Provenance & honest limitations
 

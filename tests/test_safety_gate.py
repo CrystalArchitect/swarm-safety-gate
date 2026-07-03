@@ -65,6 +65,46 @@ def test_empty_command_denied():
     assert ok is False
 
 
+# --- Regression: whitelist must be case-insensitive -----------------------
+# Upstream stored mixed-case entries ("Get-Content") but compared against a
+# lower-cased command, so these PowerShell reads could never be allowed.
+
+@pytest.mark.parametrize("cmd", [
+    "Get-Content file.txt",
+    "get-content file.txt",
+    "Get-ChildItem",
+    "Get-Location",
+    "GIT status",
+    "Python script.py",
+])
+def test_whitelist_is_case_insensitive(cmd):
+    ok, reason = SafetyGate.validate_command(cmd)
+    assert ok is True, f"expected {cmd!r} allowed, got: {reason}"
+
+
+# --- Regression: added cross-platform dangerous patterns ------------------
+
+@pytest.mark.parametrize("cmd", [
+    "python -c shutdown",     # shutdown
+    "echo reboot now",        # reboot
+    "python shred secrets",   # shred
+    "echo wipefs disk",       # wipefs
+    "python chown root x",    # chown
+    "echo killall node",      # killall
+    "echo crontab -r",        # crontab
+])
+def test_new_dangerous_patterns_denied(cmd):
+    ok, reason = SafetyGate.validate_command(cmd)
+    assert ok is False
+    assert "Dangerous" in reason
+
+
+def test_fork_bomb_denied():
+    # ':' is not whitelisted, and the fork-bomb shape is also pattern-matched.
+    ok, reason = SafetyGate.validate_command(":(){ :|:& };:")
+    assert ok is False
+
+
 # --- filesystem_delete guards ---------------------------------------------
 
 def test_delete_refuses_root_and_empty():

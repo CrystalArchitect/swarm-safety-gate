@@ -12,11 +12,14 @@ class SafetyGate:
     
     # Layer 2: Whitelist Policy
     WHITELIST_COMMANDS = [
-        "git", "python", "npm", "pip", "dir", "ls", "cd", 
-        "echo", "cat", "mkdir", "type", "Get-ChildItem", 
+        "git", "python", "npm", "pip", "dir", "ls", "cd",
+        "echo", "cat", "mkdir", "type", "Get-ChildItem",
         "Get-Location", "Get-Content"
     ]
-    
+    # Commands are matched case-insensitively; keep a normalized set so mixed-case
+    # entries (e.g. "Get-Content") are actually reachable after lower-casing input.
+    WHITELIST_LOWER = frozenset(c.lower() for c in WHITELIST_COMMANDS)
+
     DANGEROUS_PATTERNS = [
         r"format\s+[a-zA-Z]:",
         r"del\s+.*\/s",
@@ -47,9 +50,20 @@ class SafetyGate:
         # Unix dangerous commands (should never appear on Windows)
         r"\brm\s+-rf\b",
         r"\bchmod\b",
+        r"\bchown\b",
         r"\bsudo\b",
+        r"\bdoas\b",
         r"\bdd\s+if=",
         r"\bmkfs\b",
+        r"\bshred\b",
+        r"\bwipefs\b",
+        r"\bshutdown\b",
+        r"\breboot\b",
+        r"\bhalt\b",
+        r"\bpoweroff\b",
+        r"\bkillall\b",
+        r"\bcrontab\b",
+        r":\s*\(\s*\)\s*\{",   # classic fork bomb :(){ :|:& };:
     ]
 
     @classmethod
@@ -58,8 +72,8 @@ class SafetyGate:
         command_lower = command.lower().strip()
         base_cmd = command_lower.split()[0] if command_lower else ""
         
-        # 1. Check Whitelist
-        if base_cmd not in cls.WHITELIST_COMMANDS:
+        # 1. Check Whitelist (case-insensitive: base_cmd is already lower-cased)
+        if base_cmd not in cls.WHITELIST_LOWER:
             return False, f"Policy Error: Command '{base_cmd}' is not in the allowed list (Whitelist). Use specialized tools or request permissions."
 
         # 2. Check for dangerous patterns even in whitelisted commands
